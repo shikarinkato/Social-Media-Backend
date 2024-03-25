@@ -4,10 +4,9 @@ import User from "../models/User.js";
 
 export const CreatePost = async (req, res) => {
   let user = req.user;
-  let { img, interactions } = req.body;
-  // console.log(interactions);
+  let { img, interactions, postCaption } = req.body;
   try {
-    if (!img || !interactions) {
+    if (!interactions) {
       res
         .status(502)
         .json({ message: "Required fields not Found", success: false });
@@ -16,7 +15,6 @@ export const CreatePost = async (req, res) => {
       let updatedInteractions;
 
       let post = await Posts.findOne({ user: user._id });
-      console.log(post);
       if (post === null || post.posts.length <= 0) {
         updatedInteractions = {
           user: user._id,
@@ -28,7 +26,14 @@ export const CreatePost = async (req, res) => {
         if (interactions) {
           post = await Posts.create({
             user: user._id,
-            posts: [{ userId: user._id, img, interactions: interactions._id }],
+            posts: [
+              {
+                userId: user._id,
+                postCaption,
+                img,
+                interactions: interactions._id,
+              },
+            ],
           });
 
           res
@@ -54,7 +59,12 @@ export const CreatePost = async (req, res) => {
         if (interactions) {
           post = await Posts.findByIdAndUpdate(post._id, {
             $push: {
-              posts: { userId: user._id, img, interactions: interactions._id },
+              posts: {
+                userId: user._id,
+                postCaption,
+                img,
+                interactions: interactions._id,
+              },
             },
           });
           res
@@ -69,7 +79,7 @@ export const CreatePost = async (req, res) => {
       }
     }
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     res.status(500).json({ message: "Internal Server Error", success: false });
   }
 };
@@ -78,7 +88,7 @@ export const GetGlobalPosts = async (req, res) => {
   try {
     let allPosts = await Posts.find().populate("posts").exec();
     let totalPosts = [];
-    if (allPosts) {
+    if (allPosts.length > 0) {
       if (totalPosts.length <= 0) {
         for (let i = 0; i < allPosts.length; i++) {
           for (let j = 0; j < allPosts[i].posts.length; j++) {
@@ -90,9 +100,14 @@ export const GetGlobalPosts = async (req, res) => {
           totalPosts.map(async (post, idx) => {
             let user = await User.findById(post.userId);
             return {
-              user: { pic: user.pic, userName: user.userName },
+              user: {
+                pic: user.pic,
+                userName: user.userName,
+                userId: user._id,
+              },
               img: post.img,
               interactions: await Interactions.findById(post.interactions),
+              postCaption: post.postCaption,
               _id: post._id,
             };
           })
@@ -126,19 +141,20 @@ export const GetUserPosts = async (req, res) => {
       let updatedPostsArr = [];
       for (let i = 0; i < posts.posts.length; i++) {
         interactions = await Interactions.findById(posts.posts[i].interactions);
+        let user = await User.findById(posts.posts[i].userId);
         updatedPostsArr.push({
-          userId: posts.posts[i].userId,
+          user: { userId: user._id, userName: user.userName, pic: user.pic },
           img: posts.posts[i].img,
           interactions,
+          postCaption: posts.posts[i].postCaption,
           _id: posts.posts[i]._id,
         });
       }
       res.status(200).json({ updatedPostsArr, success: true });
     } else {
       if (!posts) {
-        posts = await Posts.findByIdAndDelete(posts._id);
         let updatedUser = await User.findByIdAndUpdate(
-          posts.user,
+          userId,
           {
             $unset: { userPosts: "" },
           },

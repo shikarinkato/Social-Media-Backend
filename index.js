@@ -2,6 +2,7 @@ import { config } from "dotenv";
 import express from "express";
 import UserRouter from "./routes/User.js";
 import PostRouter from "./routes/Posts.js";
+import InteractionRouter from "./routes/Interactions.js";
 import cors from "cors";
 export const app = express();
 
@@ -10,7 +11,7 @@ config({
 });
 
 app.use(express.json());
-console.log(process.env.FRONTEND_URL)
+console.log(process.env.FRONTEND_URL);
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
@@ -28,3 +29,4 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/posts", PostRouter);
+app.use("/api/v1/interactions", InteractionRouter);

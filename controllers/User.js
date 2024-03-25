@@ -177,9 +177,8 @@ export async function UpdateUser(req, res) {
 export async function ChangeFollowing(req, res) {
   let user = req.user;
   let { anotherUser, action, pic } = req.body;
-
   try {
-    if (anotherUser === user._id.toString(0)) {
+    if (anotherUser === user._id.toString()) {
       res.status(403).json({
         message: "Seems like your mind isn't at right place",
         success: false,
@@ -194,9 +193,8 @@ export async function ChangeFollowing(req, res) {
       if (action === "add") {
         const userExistsInFollowings = await User.findOne(
           { _id: user._id },
-          { followings: { id: anotherUser } }
+          { followings: { $elemMatch: { id: anotherUser } } }
         );
-
         if (
           !userExistsInFollowings ||
           userExistsInFollowings.followings.length === 0
@@ -243,10 +241,10 @@ export async function ChangeFollowing(req, res) {
           });
         }
       } else if (action === "remove") {
-        const userExistsInFollowings = await User.findOne({
-          _id: user._id,
-          "followings.id": anotherUser,
-        });
+        const userExistsInFollowings = await User.findOne(
+          { _id: user._id },
+          { followings: { $elemMatch: { id: anotherUser } } }
+        );
 
         if (userExistsInFollowings) {
           let updatedUser = await User.findByIdAndUpdate(user._id, {
