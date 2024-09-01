@@ -131,7 +131,6 @@ export const AddComment = async (req, res) => {
           );
           if (actualPost.length > 0) {
             anotherUser = await User.findById(anotherUser);
-            console.log(anotherUser)
             let interactions = await Interactions.findByIdAndUpdate(
               actualPost[0].interactions,
               {

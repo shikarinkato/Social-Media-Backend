@@ -87,6 +87,7 @@ export const CreatePost = async (req, res) => {
 export const GetGlobalPosts = async (req, res) => {
   try {
     let allPosts = await Posts.find().populate("posts").exec();
+    console.log("Called");
     let totalPosts = [];
     if (allPosts.length > 0) {
       if (totalPosts.length <= 0) {
@@ -185,8 +186,15 @@ export const DeletePost = async (req, res) => {
       res
         .status(400)
         .json({ message: "Required fields Missing", success: false });
+      return;
     } else {
-      let post = await Posts.findOneAndUpdate(
+      let post = await Posts.findOneAndDelete(
+        { user: user._id },
+        { posts: { $lte: 0 } },
+        { new: true }
+      );
+
+      post = await Posts.findOneAndUpdate(
         { user: user._id },
         { $pull: { posts: { _id: postId } } },
         { new: true }

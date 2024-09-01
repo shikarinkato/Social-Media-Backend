@@ -1,10 +1,9 @@
 import bcryptjs from "bcryptjs";
-import { v4 as uuidV4 } from "uuid";
-import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import Posts from "../models/Posts.js";
+import { v4 as uuidV4 } from "uuid";
 import Interactions from "../models/Interactions.js";
+import Posts from "../models/Posts.js";
+import User from "../models/User.js";
 
 export const AddNewUser = async (req, res) => {
   const uid = uuidV4();
@@ -26,7 +25,6 @@ export const AddNewUser = async (req, res) => {
         return;
       } else {
         let isuserName = await User.findOne({ userName });
-        console.log(isuserName);
         if (isuserName) {
           res
             .status(502)
@@ -184,7 +182,7 @@ export async function ChangeFollowing(req, res) {
         success: false,
       });
     } else {
-      if (!anotherUser || !action || !pic) {
+      if (!anotherUser || !action) {
         res
           .status(404)
           .json({ message: "Required fields are Missing", success: false });
@@ -392,6 +390,7 @@ export async function RemoveFollower(req, res) {
 
 export async function SearchUser(req, res) {
   let query = req.query;
+  console.log(query);
   try {
     if (!query.user) {
       res
